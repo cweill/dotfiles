@@ -323,6 +323,10 @@ explicitly specified that a variable should be set before a package is loaded,
 you should place your code here."
   (setq powerline-default-separator 'utf-8)
   (global-git-commit-mode t)
+
+  (require 'evil-surround)
+  (global-evil-surround-mode 1)
+
   (defun copy-to-clipboard ()
     "Copies selection to x-clipboard."
     (interactive)
