@@ -45,7 +45,6 @@ values."
      helm
      markdown
      org
-     osx
      python
      (shell :variables
             shell-default-shell 'eshell
@@ -337,7 +336,10 @@ you should place your code here."
           )
       (if (region-active-p)
           (progn
-            (shell-command-on-region (region-beginning) (region-end) "xsel -i -b")
+            (if (equal (shell-command-to-string "uname") "Darwin\n")
+                (shell-command-on-region (region-beginning) (region-end) "pbcopy")
+                (shell-command-on-region (region-beginning) (region-end) "xsel -i -b")
+            )
             (message "Yanked region to clipboard!")
             (deactivate-mark))
         (message "No region active; can't yank to clipboard!")))
@@ -351,7 +353,10 @@ you should place your code here."
           (clipboard-yank)
           (message "graphics active")
           )
-      (insert (shell-command-to-string "xsel -o -b"))
+      (if (equal (shell-command-to-string "uname") "Darwin\n")
+          (insert (shell-command-to-string "pbpaste"))
+          (insert (shell-command-to-string "xsel -o -b"))
+        )
       )
     )
   (evil-leader/set-key "o y" 'copy-to-clipboard)
