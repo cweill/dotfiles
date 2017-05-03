@@ -113,3 +113,6 @@ alias e="emacsclient -n"
 alias et="emacsclient -t"
 alias ed="emacs --daemon"
 alias E="SUDO_EDITOR=emacscclient sudo -e"
+
+export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/local/cuda/lib64:/usr/local/cuda/extras/CUPTI/lib64"
+export CUDA_HOME=/usr/local/cuda
