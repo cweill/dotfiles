@@ -94,17 +94,40 @@ if [[ -e ~/.local/lib/python2.7/site-packages/powerline/bindings/zsh/powerline.z
     . ~/.local/lib/python2.7/site-packages/powerline/bindings/zsh/powerline.zsh
 fi
 
+# Renew important environment variables in tmux.
+if [ -n "$TMUX" ]; then
+  function refresh {
+    export $(tmux show-environment | grep "^SSH_AUTH_SOCK")
+    export $(tmux show-environment | grep "^DISPLAY")
+  }
+else
+    function refresh {
+      true
+    }
+fi
+
+# Refresh before each new command gets executed.
+function preexec {
+  refresh
+}
+
 #Prevent Ctrl-d exiting
 setopt ignoreeof
 
+# Make vi mode usable: https://superuser.com/a/648046
 KEYTIMEOUT=1
+bindkey -M vicmd '^[' undefined-key
+bindkey -rM viins '^X'
+bindkey -M viins '^X,' _history-complete-newer \
+                 '^X/' _history-complete-older \
+                 '^X`' _bash_complete-word
 
 export PATH="/usr/local/sbin:$PATH"
 
 export GOPATH=~/go
 export PATH=$PATH:$GOPATH/bin
 
-export EDITOR="emacsclient -t"
+export EDITOR="emacs -nw"
 export TERM=xterm-256color
 
 alias em="emacs"
