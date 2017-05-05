@@ -348,7 +348,7 @@ you should place your code here."
       (if (region-active-p)
         (progn
           (if (equal (shell-command-to-string "uname") "Darwin\n")
-            (shell-command-on-region (region-beginning) (region-end) (format "DISPLAY=%s pbcopy" (get-display)))
+              (shell-command-on-region (region-beginning) (region-end) (format "DISPLAY=%s reattach-to-user-namespace pbcopy" (get-display)))
             (shell-command-on-region (region-beginning) (region-end) (format "DISPLAY=%s xsel -ib" (get-display)))
             )
           (message (format "Yanked region to clipboard \"%s\"!" (get-display)))
@@ -368,7 +368,7 @@ you should place your code here."
         (message "graphics active")
         )
       (if (equal (shell-command-to-string "uname") "Darwin\n")
-        (insert (shell-command-to-string (format "DISPLAY=%s pbpaste" (get-display))))
+          (insert (shell-command-to-string (format "DISPLAY=%s reattach-to-user-namespace pbpaste" (get-display))))
         (insert (shell-command-to-string (format "DISPLAY=%s xsel -ob" (get-display))))
         )
       )
