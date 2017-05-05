@@ -95,15 +95,13 @@ if [[ -e ~/.local/lib/python2.7/site-packages/powerline/bindings/zsh/powerline.z
 fi
 
 # Renew important environment variables in tmux.
-if [ -n "$TMUX" ]; then
+if [[ -n $TMUX ]]; then
   function refresh {
-    export $(tmux show-environment | grep "^SSH_AUTH_SOCK")
-    export $(tmux show-environment | grep "^DISPLAY")
+    export SSH_AUTH_SOCK=$(tmux show-environment | grep "^SSH_AUTH_SOCK.*$" | sed "s/SSH_AUTH_SOCK=//")
+    export DISPLAY=$(tmux show-environment | grep "^DISPLAY.*$" | sed "s/DISPLAY=//")
   }
 else
-    function refresh {
-      true
-    }
+    function refresh { }
 fi
 
 # Refresh before each new command gets executed.
@@ -115,7 +113,7 @@ function preexec {
 setopt ignoreeof
 
 # Make vi mode usable: https://superuser.com/a/648046
-KEYTIMEOUT=1
+export KEYTIMEOUT=1
 bindkey -M vicmd '^[' undefined-key
 bindkey -rM viins '^X'
 bindkey -M viins '^X,' _history-complete-newer \
