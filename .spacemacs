@@ -326,38 +326,52 @@ you should place your code here."
   (require 'evil-surround)
   (global-evil-surround-mode 1)
 
+  (defun get-display ()
+    (shell-command-to-string "if [[ -n $TMUX ]]; then
+        export DISPLAY=$(tmux show-environment | grep -o '^DISPLAY.*$' | sed 's/DISPLAY=//')
+      fi
+      if [[ -z $DISPLAY ]]; then
+        export DISPLAY=:0
+      fi
+      printf $DISPLAY")
+    )
+
   (defun copy-to-clipboard ()
     "Copies selection to x-clipboard."
     (interactive)
     (if (display-graphic-p)
-        (progn
-          (message "Yanked region to x-clipboard!")
-          (call-interactively 'clipboard-kill-ring-save)
-          )
+      (progn
+        (message "Yanked region to x-clipboard!")
+        (call-interactively 'clipboard-kill-ring-save)
+        )
       (if (region-active-p)
-          (progn
-            (if (equal (shell-command-to-string "uname") "Darwin\n")
-                (shell-command-on-region (region-beginning) (region-end) "pbcopy")
-                (shell-command-on-region (region-beginning) (region-end) "xsel -i -b")
+        (progn
+          (if (equal (shell-command-to-string "uname") "Darwin\n")
+            (shell-command-on-region (region-beginning) (region-end) (format "DISPLAY=%s pbcopy" (get-display)))
+            (shell-command-on-region (region-beginning) (region-end) (format "DISPLAY=%s xsel -ib" (get-display)))
             )
-            (message "Yanked region to clipboard!")
-            (deactivate-mark))
-        (message "No region active; can't yank to clipboard!")))
+          (message (format "Yanked region to clipboard \"%s\"!" (get-display)))
+          (deactivate-mark)
+          )
+        (message "No region active; can't yank to clipboard!")
+        )
+      )
     )
 
   (defun paste-from-clipboard ()
     "Pastes from x-clipboard."
     (interactive)
     (if (display-graphic-p)
-        (progn
-          (clipboard-yank)
-          (message "graphics active")
-          )
+      (progn
+        (clipboard-yank)
+        (message "graphics active")
+        )
       (if (equal (shell-command-to-string "uname") "Darwin\n")
-          (insert (shell-command-to-string "pbpaste"))
-          (insert (shell-command-to-string "xsel -o -b"))
+        (insert (shell-command-to-string (format "DISPLAY=%s pbpaste" (get-display))))
+        (insert (shell-command-to-string (format "DISPLAY=%s xsel -ob" (get-display))))
         )
       )
+      (message (format "Pasted from clipboard \"%s\"!" (get-display)))
     )
   (evil-leader/set-key "o y" 'copy-to-clipboard)
   (evil-leader/set-key "o p" 'paste-from-clipboard)
@@ -372,7 +386,7 @@ you should place your code here."
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
    (quote
-    (flycheck-ycmd company-ycmd ycmd request-deferred deferred yapfify pyvenv pytest pyenv-mode py-isort pip-requirements live-py-mode hy-mode helm-pydoc go-guru go-eldoc cython-mode company-go go-mode company-anaconda anaconda-mode pythonic helm-purpose window-purpose imenu-list browse-at-remote winum unfill fuzzy evil-commentary xterm-color smeargle shell-pop reveal-in-osx-finder pbcopy osx-trash osx-dictionary orgit org-projectile org-present org org-pomodoro alert log4e gntp org-download mwim multi-term mmm-mode markdown-toc markdown-mode magit-gitflow launchctl htmlize helm-gitignore helm-company helm-c-yasnippet gnuplot gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link git-gutter-fringe+ git-gutter-fringe fringe-helper git-gutter+ git-gutter gh-md flyspell-correct-helm flyspell-correct flycheck-pos-tip pos-tip flycheck evil-magit magit magit-popup git-commit with-editor eshell-z eshell-prompt-extras esh-help diff-hl company-statistics company auto-yasnippet yasnippet auto-dictionary ac-ispell auto-complete ws-butler window-numbering which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint info+ indent-guide ido-vertical-mode hydra hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation hide-comnt help-fns+ helm-themes helm-swoop helm-projectile helm-mode-manager helm-make projectile pkg-info epl helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu highlight elisp-slime-nav dumb-jump f s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed dash aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async quelpa package-build spacemacs-theme))))
+    (disaster company-c-headers cmake-mode clang-format flycheck-ycmd company-ycmd ycmd request-deferred deferred yapfify pyvenv pytest pyenv-mode py-isort pip-requirements live-py-mode hy-mode helm-pydoc go-guru go-eldoc cython-mode company-go go-mode company-anaconda anaconda-mode pythonic helm-purpose window-purpose imenu-list browse-at-remote winum unfill fuzzy evil-commentary xterm-color smeargle shell-pop reveal-in-osx-finder pbcopy osx-trash osx-dictionary orgit org-projectile org-present org org-pomodoro alert log4e gntp org-download mwim multi-term mmm-mode markdown-toc markdown-mode magit-gitflow launchctl htmlize helm-gitignore helm-company helm-c-yasnippet gnuplot gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link git-gutter-fringe+ git-gutter-fringe fringe-helper git-gutter+ git-gutter gh-md flyspell-correct-helm flyspell-correct flycheck-pos-tip pos-tip flycheck evil-magit magit magit-popup git-commit with-editor eshell-z eshell-prompt-extras esh-help diff-hl company-statistics company auto-yasnippet yasnippet auto-dictionary ac-ispell auto-complete ws-butler window-numbering which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint info+ indent-guide ido-vertical-mode hydra hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation hide-comnt help-fns+ helm-themes helm-swoop helm-projectile helm-mode-manager helm-make projectile pkg-info epl helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu highlight elisp-slime-nav dumb-jump f s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed dash aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async quelpa package-build spacemacs-theme))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
