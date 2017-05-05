@@ -97,11 +97,11 @@ fi
 # Renew important environment variables in tmux.
 if [[ -n $TMUX ]]; then
   function refresh {
-    export SSH_AUTH_SOCK=$(tmux show-environment | grep "^SSH_AUTH_SOCK.*$" | sed "s/SSH_AUTH_SOCK=//")
-    export DISPLAY=$(tmux show-environment | grep "^DISPLAY.*$" | sed "s/DISPLAY=//")
+    export SSH_AUTH_SOCK=$(tmux show-environment | grep -o "^SSH_AUTH_SOCK.*$" | sed "s/SSH_AUTH_SOCK=//")
+    export DISPLAY=$(tmux show-environment | grep -o "^DISPLAY.*$" | sed "s/DISPLAY=//")
   }
 else
-    function refresh { }
+  function refresh { }
 fi
 
 # Refresh before each new command gets executed.
