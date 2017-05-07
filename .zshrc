@@ -93,6 +93,7 @@ fi
 if [[ -e ~/.local/lib/python2.7/site-packages/powerline/bindings/zsh/powerline.zsh ]]; then
     . ~/.local/lib/python2.7/site-packages/powerline/bindings/zsh/powerline.zsh
 fi
+powerline-daemon
 
 # Renew important environment variables in tmux.
 if [[ -n $TMUX ]]; then
