@@ -93,7 +93,6 @@ fi
 if [[ -e ~/.local/lib/python2.7/site-packages/powerline/bindings/zsh/powerline.zsh ]]; then
     . ~/.local/lib/python2.7/site-packages/powerline/bindings/zsh/powerline.zsh
 fi
-powerline-daemon
 
 # Renew important environment variables in tmux.
 if [[ -n $TMUX ]]; then
@@ -121,20 +120,9 @@ bindkey -M viins '^X,' _history-complete-newer \
                  '^X/' _history-complete-older \
                  '^X`' _bash_complete-word
 
-export PATH="/usr/local/sbin:$PATH"
-
-export GOPATH=~/go
-export PATH=$PATH:$GOPATH/bin
-
-export EDITOR="emacs -nw"
-export TERM=xterm-256color
-
 alias em="emacs"
 alias en="emacs -nw"
 alias e="emacsclient -n"
 alias et="emacsclient -t"
 alias ed="emacs --daemon"
 alias E="SUDO_EDITOR=emacscclient sudo -e"
-
-export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/local/cuda/lib64:/usr/local/cuda/extras/CUPTI/lib64"
-export CUDA_HOME=/usr/local/cuda
