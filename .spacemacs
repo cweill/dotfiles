@@ -324,7 +324,8 @@ It should only modify the values of Spacemacs settings."
    ;; If non-nil the frame is maximized when Emacs starts up.
    ;; Takes effect only if `dotspacemacs-fullscreen-at-startup' is nil.
    ;; (default nil) (Emacs 24.4+ only)
-   dotspacemacs-maximized-at-startup t
+   dotspacemacs-maximized-at-startup nil
+
    ;; A value from the range (0..100), in increasing opacity, which describes
    ;; the transparency level of a frame when it's active or selected.
    ;; Transparency can be toggled through `toggle-transparency'. (default 90)
@@ -362,7 +363,8 @@ It should only modify the values of Spacemacs settings."
    ;;                       text-mode
    ;;   :size-limit-kb 1000)
    ;; (default nil)
-   dotspacemacs-line-numbers t
+   dotspacemacs-line-numbers nil
+
    ;; Code folding method. Possible values are `evil' and `origami'.
    ;; (default 'evil)
    dotspacemacs-folding-method 'evil
@@ -453,55 +455,27 @@ you should place your code here."
   (require 'evil-surround)
   (global-evil-surround-mode 1)
 
-  (defun get-display ()
-    (shell-command-to-string "if [[ -n $TMUX ]]; then
-        export DISPLAY=$(tmux show-environment | grep -o '^DISPLAY.*$' | sed 's/DISPLAY=//')
-      fi
-      if [[ -z $DISPLAY ]]; then
-        export DISPLAY=:0
-      fi
-      printf $DISPLAY")
-    )
-
-  (defun copy-to-clipboard ()
-    "Copies selection to x-clipboard."
-    (interactive)
-    (if (display-graphic-p)
-      (progn
-        (message "Yanked region to x-clipboard!")
-        (call-interactively 'clipboard-kill-ring-save)
-        )
-      (if (region-active-p)
-        (progn
-          (if (equal (shell-command-to-string "uname") "Darwin\n")
-              (shell-command-on-region (region-beginning) (region-end) (format "DISPLAY=%s reattach-to-user-namespace pbcopy" (get-display)))
-            (shell-command-on-region (region-beginning) (region-end) (format "DISPLAY=%s xsel -ib" (get-display)))
-            )
-          (message (format "Yanked region to clipboard \"%s\"!" (get-display)))
-          (deactivate-mark)
-          )
-        (message "No region active; can't yank to clipboard!")
-        )
-      )
-    )
-
-  (defun paste-from-clipboard ()
-    "Pastes from x-clipboard."
-    (interactive)
-    (if (display-graphic-p)
-      (progn
-        (clipboard-yank)
-        (message "graphics active")
-        )
-      (if (equal (shell-command-to-string "uname") "Darwin\n")
-          (insert (shell-command-to-string (format "DISPLAY=%s reattach-to-user-namespace pbpaste" (get-display))))
-        (insert (shell-command-to-string (format "DISPLAY=%s xsel -ob" (get-display))))
-        )
-      )
-      (message (format "Pasted from clipboard \"%s\"!" (get-display)))
-    )
-  (evil-leader/set-key "o y" 'copy-to-clipboard)
-  (evil-leader/set-key "o p" 'paste-from-clipboard)
+  ;; Amazing hack lifted from: http://emacs.stackexchange.com/a/15054/12585
+  ;; Imagine the following scenario.  One wants to paste some previously copied
+  ;; (from application other than Emacs) text to the system's clipboard in place
+  ;; of some contiguous block of text in a buffer.  Hence, one switches to
+  ;; `evil-visual-state' and selects the corresponding block of text to be
+  ;; replaced.  However, one either pastes some (previously killed) text from
+  ;; `kill-ring' or (if `kill-ring' is empty) receives the error: "Kill ring is
+  ;; empty"; see `evil-visual-paste' and `current-kill' respectively.  The
+  ;; reason why `current-kill' does not return the desired text from the
+  ;; system's clipboard is because `evil-visual-update-x-selection' is being run
+  ;; by `evil-visual-pre-command' before `evil-visual-paste'.  That is
+  ;; `x-select-text' is being run (by `evil-visual-update-x-selection') before
+  ;; `evil-visual-paste'.  As a result, `x-select-text' copies the selected
+  ;; block of text to the system's clipboard as long as
+  ;; `x-select-enable-clipboard' is non-nil (and in this scenario we assume that
+  ;; it is).  According to the documentation of `interprogram-paste-function',
+  ;; it should not return the text from the system's clipboard if it was last
+  ;; provided by Emacs (e.g. with `x-select-text').  Thus, one ends up with the
+  ;; problem described above.  To solve it, simply make
+  ;; `evil-visual-update-x-selection' do nothing:
+  (fset 'evil-visual-update-x-selection 'ignore)
  )
 
 ;; Do not write anything past this comment. This is where Emacs will
@@ -532,7 +506,7 @@ This function is called at the very end of Spacemacs initialization."
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
    (quote
-    (realgud test-simple loc-changes load-relative nameless ivy ghub font-lock+ disaster company-c-headers cmake-mode clang-format flycheck-ycmd company-ycmd ycmd request-deferred deferred yapfify pyvenv pytest pyenv-mode py-isort pip-requirements live-py-mode hy-mode helm-pydoc go-guru go-eldoc cython-mode company-go go-mode company-anaconda anaconda-mode pythonic helm-purpose window-purpose imenu-list browse-at-remote winum unfill fuzzy evil-commentary xterm-color smeargle shell-pop reveal-in-osx-finder pbcopy osx-trash osx-dictionary orgit org-projectile org-present org org-pomodoro alert log4e gntp org-download mwim multi-term mmm-mode markdown-toc markdown-mode magit-gitflow launchctl htmlize helm-gitignore helm-company helm-c-yasnippet gnuplot gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link git-gutter-fringe+ git-gutter-fringe fringe-helper git-gutter+ git-gutter gh-md flyspell-correct-helm flyspell-correct flycheck-pos-tip pos-tip flycheck evil-magit magit magit-popup git-commit with-editor eshell-z eshell-prompt-extras esh-help diff-hl company-statistics company auto-yasnippet yasnippet auto-dictionary ac-ispell auto-complete ws-butler window-numbering which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint info+ indent-guide ido-vertical-mode hydra hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation hide-comnt help-fns+ helm-themes helm-swoop helm-projectile helm-mode-manager helm-make projectile pkg-info epl helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu highlight elisp-slime-nav dumb-jump f s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed dash aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async quelpa package-build spacemacs-theme))))
+    (yasnippet-snippets symon string-inflection spaceline-all-the-icons all-the-icons memoize realgud test-simple loc-changes load-relative pippel pipenv password-generator overseer org-mime org-brain nameless importmagic epc ctable concurrent helm-xref helm-rtags google-c-style godoctor go-tag go-rename flycheck-rtags evil-org evil-lion evil-cleverparens paredit editorconfig counsel-projectile counsel swiper ivy company-rtags rtags centered-cursor-mode font-lock+ disaster company-c-headers cmake-mode clang-format flycheck-ycmd company-ycmd ycmd request-deferred deferred yapfify pyvenv pytest pyenv-mode py-isort pip-requirements live-py-mode hy-mode helm-pydoc go-guru go-eldoc cython-mode company-go go-mode company-anaconda anaconda-mode pythonic helm-purpose window-purpose imenu-list browse-at-remote winum unfill fuzzy evil-commentary xterm-color smeargle shell-pop reveal-in-osx-finder pbcopy osx-trash osx-dictionary orgit org-projectile org-present org org-pomodoro alert log4e gntp org-download mwim multi-term mmm-mode markdown-toc markdown-mode magit-gitflow launchctl htmlize helm-gitignore helm-company helm-c-yasnippet gnuplot gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link git-gutter-fringe+ git-gutter-fringe fringe-helper git-gutter+ git-gutter gh-md flyspell-correct-helm flyspell-correct flycheck-pos-tip pos-tip flycheck evil-magit magit magit-popup git-commit with-editor eshell-z eshell-prompt-extras esh-help diff-hl company-statistics company auto-yasnippet yasnippet auto-dictionary ac-ispell auto-complete ws-butler window-numbering which-key volatile-highlights vi-tilde-fringe uuidgen use-package toc-org spaceline powerline restart-emacs request rainbow-delimiters popwin persp-mode pcre2el paradox spinner org-plus-contrib org-bullets open-junk-file neotree move-text macrostep lorem-ipsum linum-relative link-hint info+ indent-guide ido-vertical-mode hydra hungry-delete hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation hide-comnt help-fns+ helm-themes helm-swoop helm-projectile helm-mode-manager helm-make projectile pkg-info epl helm-flx helm-descbinds helm-ag google-translate golden-ratio flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu highlight elisp-slime-nav dumb-jump f s diminish define-word column-enforce-mode clean-aindent-mode bind-map bind-key auto-highlight-symbol auto-compile packed dash aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line helm avy helm-core popup async quelpa package-build spacemacs-theme))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
