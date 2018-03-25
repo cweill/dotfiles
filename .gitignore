@@ -3,3 +3,5 @@
 !.spacemacs
 !.tmux.conf
 !.zshrc
+!.zshenv
+!.zprofile
